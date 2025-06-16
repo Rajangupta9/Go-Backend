@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/task/create", middleware.AuthMiddleware(handlers.CreateTask))
 	http.HandleFunc("/task/list", middleware.AuthMiddleware(handlers.ListAllTask))
 	http.HandleFunc("/task/update", middleware.AuthMiddleware(handlers.UpdateTask))
+	http.HandleFunc("/task/delete", middleware.AuthMiddleware(handlers.DeletedTask))
 
 
 	port := os.Getenv("PORT")

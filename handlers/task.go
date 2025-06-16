@@ -6,7 +6,6 @@ import (
 	"GoBackend/utils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -28,8 +27,6 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	task.UserID = userId
 	task.CreatedAt = time.Now()
 	task.UpdatedAt = time.Now()
-
-	fmt.Println(task)
 
 	collection := config.MongoClient.Database("task_db").Collection("tasks")
 
@@ -90,7 +87,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		updateField["title"] = UpdateReq.Title
 	}
 	if UpdateReq.Description != "" {
-		updateField["discription"] = UpdateReq.Description
+		updateField["description"] = UpdateReq.Description
 	}
 	if UpdateReq.Status != "" {
 		updateField["status"] = UpdateReq.Status
@@ -101,10 +98,9 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	updateField["updated_at"] = time.Now()
 
-
 	if len(updateField) < 2 {
-		 utils.ResponseWithError(w , http.StatusBadRequest, "no update request provided")
-		 return 
+		utils.ResponseWithError(w, http.StatusBadRequest, "no update request provided")
+		return
 	}
 
 	collection := config.MongoClient.Database("task_db").Collection("tasks")
