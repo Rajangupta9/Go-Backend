@@ -6,6 +6,7 @@ import (
 	"GoBackend/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -27,6 +28,8 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	task.UserID = userId
 	task.CreatedAt = time.Now()
 	task.UpdatedAt = time.Now()
+
+	fmt.Println(task)
 
 	collection := config.MongoClient.Database("task_db").Collection("tasks")
 
@@ -51,14 +54,10 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 func ListAllTask(w http.ResponseWriter, r *http.Request) {
 	userIdStr := r.Context().Value("user_id").(string)
 
-
-	
-
 	collection := config.MongoClient.Database("task_db").Collection("tasks")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 
 	cursor, err := collection.Find(ctx, bson.M{"user_id": userIdStr})
 	if err != nil {
@@ -76,3 +75,60 @@ func ListAllTask(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseWithJson(w, http.StatusOK, allTasks)
 }
 
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	// userIdstr := r.Context().Value("user_id").(string)
+	var UpdateReq models.Task
+
+	if err := json.NewDecoder(r.Body).Decode(&UpdateReq); err != nil {
+		utils.ResponseWithError(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	updateField := bson.M{}
+
+	if UpdateReq.Title != "" {
+		updateField["title"] = UpdateReq.Title
+	}
+	if UpdateReq.Description != "" {
+		updateField["discription"] = UpdateReq.Description
+	}
+	if UpdateReq.Status != "" {
+		updateField["status"] = UpdateReq.Status
+	}
+	if UpdateReq.Priority != "" {
+		updateField["priority"] = UpdateReq.Priority
+	}
+
+	updateField["updated_at"] = time.Now()
+
+
+	if len(updateField) < 2 {
+		 utils.ResponseWithError(w , http.StatusBadRequest, "no update request provided")
+		 return 
+	}
+
+	collection := config.MongoClient.Database("task_db").Collection("tasks")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{"$set": updateField}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": UpdateReq.ID}, update)
+
+	if err != nil {
+		utils.ResponseWithError(w, http.StatusInternalServerError, "failed to update the task")
+		return
+	}
+	if result.MatchedCount == 0 {
+		utils.ResponseWithError(w, http.StatusNotFound, "Task not found")
+		return
+	}
+
+	utils.ResponseWithJson(w, http.StatusOK, "task update sucessfully")
+
+}
+
+func DeletedTask(w http.ResponseWriter, r *http.Request) {
+
+}
